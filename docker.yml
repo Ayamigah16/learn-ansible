@@ -1,0 +1,71 @@
+# Docker Automation Playbook
+# This playbook installs Docker and manages container lifecycle
+
+- name: Setup Docker Infrastructure
+  hosts: app
+  become: yes
+
+  tasks:
+  - name: Install Docker using Galaxy role
+    block:
+    - name: Include Docker role
+      include_role:
+        name: geerlingguy.docker
+    rescue:
+    - name: Docker role not found
+      debug:
+        msg: "Install with: ansible-galaxy role install geerlingguy.docker"
+
+  - name: Ensure Docker is running
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+- name: Deploy Containers
+  hosts: app
+  become: yes
+
+  tasks:
+  - name: Run Nginx container
+    docker_container:
+      name: web
+      image: nginx:latest
+      state: started
+      restart_policy: always
+      ports:
+      - "80:80"
+      volumes:
+      - /var/www/html:/usr/share/nginx/html:ro
+
+  - name: Run Redis container
+    docker_container:
+      name: redis
+      image: redis:alpine
+      state: started
+      restart_policy: always
+      ports:
+      - "6379:6379"
+
+  - name: Run PostgreSQL container
+    docker_container:
+      name: postgres
+      image: postgres:15-alpine
+      state: started
+      restart_policy: always
+      ports:
+      - "5432:5432"
+      env:
+        POSTGRES_PASSWORD: "{{ vault_db_password }}"
+        POSTGRES_USER: "{{ db_user }}"
+        POSTGRES_DB: "{{ db_name }}"
+      volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  - name: Prune unused Docker resources
+    docker_prune:
+      containers: yes
+      images: yes
+      networks: yes
+      volumes: no
+      builder_cache: yes
