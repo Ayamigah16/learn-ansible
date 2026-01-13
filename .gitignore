@@ -1,0 +1,41 @@
+# Ignore Ansible runtime files
+*.retry
+ansible.log
+.vault_pass
+
+# Ignore fact cache
+/tmp/ansible_facts/
+
+# Ignore downloaded roles (should be in requirements.yml)
+roles/geerlingguy.*
+
+# Ignore SSH keys
+*.pem
+*.key
+id_rsa*
+
+# Ignore vault files (keep .example files)
+vault.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.bak
