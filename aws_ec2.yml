@@ -1,0 +1,30 @@
+# AWS EC2 Dynamic Inventory Configuration
+# This plugin automatically discovers EC2 instances and groups them by tags
+
+plugin: aws_ec2
+
+# Regions to search for instances
+regions:
+- eu-west-1
+
+# Group instances by tags
+keyed_groups:
+# Group by Role tag (e.g., @role_web, @role_app, @role_db)
+- key: tags.Role
+  prefix: role
+# Group by Environment tag (e.g., @env_dev, @env_prod)
+- key: tags.Environment
+  prefix: env
+
+# Only include running instances
+filters:
+  instance-state-name: running
+
+# Set hostname - tries public IP first, falls back to private IP
+hostnames:
+- ip-address # Public IP (if available)
+- private-ip-address # Fallback to private IP
+
+# Compose custom variables from instance metadata
+compose:
+  ansible_host: public_ip_address | default(private_ip_address)
