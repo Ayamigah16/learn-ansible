@@ -1,0 +1,78 @@
+name: Deploy with Ansible
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible python3-boto3 python3-botocore
+
+    - name: Configure AWS credentials
+      run: |
+        mkdir -p ~/.aws
+        cat > ~/.aws/credentials << EOF
+        [default]
+        aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        EOF
+        cat > ~/.aws/config << EOF
+        [default]
+        region = eu-west-1
+        EOF
+        chmod 600 ~/.aws/credentials ~/.aws/config
+
+    - name: Install Ansible Galaxy roles
+      run: |
+        ansible-galaxy role install -r requirements.yml
+      if: hashFiles('requirements.yml') != ''
+
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/ansible-automation.pem
+        chmod 600 ~/.ssh/ansible-automation.pem
+
+    - name: Discover AWS EC2 instances
+      run: |
+        ansible-inventory -i aws_ec2.yml --graph
+
+    - name: Create vault password file
+      run: |
+        echo "${{ secrets.ANSIBLE_VAULT_PASSWORD }}" > .vault_pass
+        chmod 600 .vault_pass
+
+    - name: Ansible syntax check
+      run: |
+        ansible-playbook site.yml --syntax-check
+
+    - name: Ansible check mode (dry-run)
+      run: |
+        ansible-playbook -i aws_ec2.yml site.yml --check --vault-password-file .vault_pass
+
+    - name: Deploy with Ansible
+      run: |
+        ansible-playbook -i aws_ec2.yml site.yml --vault-password-file .vault_pass
+
+    - name: Cleanup
+      if: always()
+      run: |
+        rm -f ~/.ssh/ansible-automation.pem .vault_pass
+        rm -rf ~/.aws
