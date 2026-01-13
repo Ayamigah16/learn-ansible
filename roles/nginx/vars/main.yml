@@ -1,0 +1,5 @@
+---
+# vars file for roles/nginx
+
+# Internal variables - high precedence
+nginx_package: nginx

@@ -1,0 +1,6 @@
+---
+# defaults file for roles/nginx
+
+# Configurable variables - can be overridden
+nginx_port: 80
+nginx_worker_processes: auto

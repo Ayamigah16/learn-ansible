@@ -1,0 +1,42 @@
+---
+# tasks file for roles/nginx
+
+- name: Show OS
+  debug:
+    var: ansible_distribution
+
+- block:
+    - name: Install nginx only on ubuntu
+      apt:
+        name: "{{ nginx_package }}"
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Ubuntu"
+      
+    - name: Install Nginx
+      apt:
+        name: "{{ nginx_package }}"
+        state: present
+        update_cache: yes
+
+    - name: Ensure Nginx is running
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  rescue:
+    - name: Log installation failure
+      debug:
+        msg: "Nginx installation or service start failed on {{ inventory_hostname }}"
+
+  always:
+    - name: Installation attempt completed
+      debug:
+        msg: "Nginx installation block completed on {{ inventory_hostname }}"
+
+- name: Deploy dynamic webpage
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+  notify: restart nginx
