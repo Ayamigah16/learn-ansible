@@ -2,7 +2,7 @@
 # This playbook installs Docker and manages container lifecycle
 
 - name: Setup Docker Infrastructure
-  hosts: app
+  hosts: app:role_app
   become: yes
 
   tasks:
