@@ -1,0 +1,53 @@
+- name: Configure Web Servers
+  hosts: web
+  become: yes
+
+  vars:
+    web_package: nginx
+
+  tasks:
+  - name: Show OS
+    debug:
+      var: ansible_distribution
+
+  - block:
+      - name: Install nginx only on ubuntu
+        apt:
+          name: "{{ web_package }}"
+          state: present
+          update_cache: yes
+        when: ansible_distribution == "Ubuntu"
+        
+      - name: Install Nginx
+        apt:
+          name: "{{ web_package }}"
+          state: present
+          update_cache: yes
+
+      - name: Ensure Nginx is running
+        service:
+          name: nginx
+          state: started
+          enabled: yes
+
+    rescue:
+      - name: Log installation failure
+        debug:
+          msg: "Nginx installation or service start failed on {{ inventory_hostname }}"
+
+    always:
+      - name: Installation attempt completed
+        debug:
+          msg: "Nginx installation block completed on {{ inventory_hostname }}"
+
+  - name: Deploy dynamic webpage
+    template:
+      src: templates/index.html.j2
+      dest: /var/www/html/index.html
+    notify: Restart Nginx
+
+  handlers:
+  - name: Restart Nginx
+    service:
+      name: nginx
+      state: restarted
