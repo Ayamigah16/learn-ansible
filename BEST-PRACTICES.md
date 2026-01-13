@@ -25,7 +25,7 @@ A comprehensive guide to production-grade Ansible automation based on real-world
 
 ### ✅ Standard Directory Layout
 
-```
+```bash
 ansible-project/
 ├── ansible.cfg                 # Main configuration
 ├── requirements.yml            # Galaxy role dependencies
@@ -70,6 +70,7 @@ ansible-project/
 ### ✅ Use Dynamic Inventory for Cloud
 
 **Why:**
+
 - No hardcoded IPs
 - Auto-discovers new instances
 - Works with auto-scaling
@@ -100,16 +101,18 @@ compose:
   ansible_host: public_ip_address | default(private_ip_address)
 ```
 
-### ✅ AWS Tagging Strategy
+## ✅ AWS Tagging Strategy
 
 **Required tags for all instances:**
+
 - `Role` - Purpose (web, app, db)
 - `Environment` - Lifecycle (dev, staging, prod)
 - `Name` - Human-readable identifier
 - `Project` - Project/application name
 
 **Example:**
-```
+
+```bash
 Role: web
 Environment: prod
 Name: web-server-01
@@ -143,9 +146,9 @@ hosts: web:!staging      # Exclusion: web but NOT staging
 
 ### ✅ Ansible Vault Best Practices
 
-**1. Separate vault files per environment**
+#### 1. Separate vault files per environment
 
-```
+```bash
 inventory/
 ├── dev/
 │   └── group_vars/
@@ -157,7 +160,7 @@ inventory/
             └── vault.yml      # Prod secrets (different password!)
 ```
 
-**2. Vault variable naming convention**
+#### 2. Vault variable naming convention
 
 ```yaml
 # vault.yml - Encrypted
@@ -171,7 +174,7 @@ api_key: "{{ vault_api_key }}"
 
 **Why:** Separates sensitive from non-sensitive, makes refactoring easier
 
-**3. Never commit unencrypted secrets**
+#### 3. Never commit unencrypted secrets
 
 ```bash
 # .gitignore
@@ -182,7 +185,7 @@ vault.yml
 !vault.yml.example
 ```
 
-**4. Vault password management**
+#### 4. Vault password management
 
 ```bash
 # Development: Use prompt
@@ -194,7 +197,7 @@ ansible-playbook site.yml --vault-password-file .vault_pass
 rm .vault_pass  # Always cleanup
 ```
 
-**5. Rotate vault passwords regularly**
+#### 5. Rotate vault passwords regularly
 
 ```bash
 # Change vault password
@@ -237,7 +240,8 @@ ansible-galaxy init roles/nginx
 ```
 
 **Results in:**
-```
+
+```bash
 roles/nginx/
 ├── tasks/
 │   └── main.yml          # Main task list
@@ -257,7 +261,7 @@ roles/nginx/
 
 ### ✅ Role Best Practices
 
-**1. One role = One responsibility**
+#### 1. One role = One responsibility
 
 ```yaml
 # ✅ Good - Single purpose
@@ -271,7 +275,7 @@ roles:
   - web_stack  # Does everything
 ```
 
-**2. Use defaults for user-configurable values**
+#### 2. Use defaults for user-configurable values
 
 ```yaml
 # roles/nginx/defaults/main.yml
@@ -280,7 +284,7 @@ nginx_worker_processes: auto
 nginx_worker_connections: 1024
 ```
 
-**3. Use vars for internal logic**
+#### 3. Use vars for internal logic**
 
 ```yaml
 # roles/nginx/vars/main.yml
@@ -289,7 +293,7 @@ nginx_service: nginx
 nginx_config_dir: /etc/nginx
 ```
 
-**4. Make roles idempotent**
+#### 4. Make roles idempotent
 
 ```yaml
 # ✅ Idempotent - Can run multiple times safely
@@ -303,7 +307,7 @@ nginx_config_dir: /etc/nginx
   shell: echo "setting=value" >> /etc/app.conf
 ```
 
-**5. Use tags for selective execution**
+#### 5. Use tags for selective execution**
 
 ```yaml
 - name: Install nginx
@@ -317,6 +321,7 @@ nginx_config_dir: /etc/nginx
 ```
 
 Run specific tags:
+
 ```bash
 ansible-playbook site.yml --tags "nginx"
 ansible-playbook site.yml --skip-tags "install"
@@ -325,6 +330,7 @@ ansible-playbook site.yml --skip-tags "install"
 ### ✅ Using Galaxy Roles
 
 **requirements.yml:**
+
 ```yaml
 roles:
   - name: geerlingguy.docker
@@ -334,11 +340,13 @@ roles:
 ```
 
 **Install:**
+
 ```bash
 ansible-galaxy role install -r requirements.yml
 ```
 
 **Use in playbook:**
+
 ```yaml
 - hosts: app
   roles:
@@ -461,7 +469,7 @@ vault_db_password: encrypted_value
 
 ### ✅ Task Best Practices
 
-**1. Always name your tasks**
+#### 1. Always name your tasks
 
 ```yaml
 # ✅ Good
@@ -476,7 +484,7 @@ vault_db_password: encrypted_value
     state: present
 ```
 
-**2. Use modules over commands**
+#### 2. Use modules over commands
 
 ```yaml
 # ✅ Good - Idempotent
@@ -490,7 +498,7 @@ vault_db_password: encrypted_value
   command: apt-get install -y nginx
 ```
 
-**3. Use check mode for safety**
+#### 3. Use check mode for safety
 
 ```yaml
 # Supports --check mode
@@ -505,7 +513,7 @@ vault_db_password: encrypted_value
   check_mode: no  # Can't simulate
 ```
 
-**4. Add changed_when and failed_when**
+#### 4. Add changed_when and failed_when
 
 ```yaml
 - name: Check service status
@@ -539,6 +547,7 @@ vault_db_password: encrypted_value
 ```
 
 **Handler rules:**
+
 - Run at end of play
 - Run only once even if notified multiple times
 - Don't run if play fails (unless using `meta: flush_handlers`)
@@ -710,7 +719,7 @@ jobs:
 
 ### ✅ Required GitHub Secrets
 
-```
+```bash
 AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY
 SSH_PRIVATE_KEY
@@ -732,13 +741,15 @@ ANSIBLE_VAULT_PASSWORD
 
 ### ✅ Layered Discovery Architecture
 
-**Layer 1: Infrastructure Discovery (Ansible + AWS)**
+#### Layer 1: Infrastructure Discovery (Ansible + AWS)
+
 ```yaml
 # Discovers infrastructure at deployment time
 ansible-playbook -i aws_ec2.yml site.yml
 ```
 
-**Layer 2: Runtime Discovery (Consul/etcd)**
+#### Layer 2: Runtime Discovery (Consul/etcd)
+
 ```python
 # Apps query for current service locations
 import consul
@@ -749,12 +760,14 @@ db = c.health.service('postgres', passing=True)
 ### ✅ When to Use Each
 
 **Use AWS Dynamic Inventory:**
+
 - ✅ Infrastructure provisioning
 - ✅ Configuration management
 - ✅ Initial deployments
 - ✅ Bootstrap operations
 
 **Add Consul/Service Mesh:**
+
 - ✅ Microservices architecture
 - ✅ Auto-scaling applications
 - ✅ Frequent IP changes
@@ -879,19 +892,22 @@ control_path = /tmp/ansible-ssh-%%h-%%p-%%r
 
 ### ✅ Performance Tips
 
-**1. Use serial for controlled rollouts**
+#### 1. Use serial for controlled rollouts
+
 ```yaml
 - hosts: web
   serial: 2  # Update 2 at a time
 ```
 
-**2. Disable fact gathering when not needed**
+#### 2. Disable fact gathering when not needed**
+
 ```yaml
 - hosts: all
   gather_facts: no
 ```
 
-**3. Use async for long-running tasks**
+#### 3. Use async for long-running tasks**
+
 ```yaml
 - name: Run long task
   command: /opt/app/migrate.sh
@@ -899,7 +915,8 @@ control_path = /tmp/ansible-ssh-%%h-%%p-%%r
   poll: 10    # Check every 10 seconds
 ```
 
-**4. Use strategy plugins**
+#### 4. Use strategy plugins**
+
 ```yaml
 - hosts: all
   strategy: free  # Don't wait for all hosts
@@ -912,6 +929,7 @@ control_path = /tmp/ansible-ssh-%%h-%%p-%%r
 ### ✅ Document Everything
 
 **README.md:**
+
 - Project overview
 - Prerequisites
 - Quick start
@@ -919,6 +937,7 @@ control_path = /tmp/ansible-ssh-%%h-%%p-%%r
 - Troubleshooting
 
 **Playbook comments:**
+
 ```yaml
 ---
 # Purpose: Deploy web application
@@ -939,6 +958,7 @@ control_path = /tmp/ansible-ssh-%%h-%%p-%%r
 ```
 
 **Role documentation:**
+
 ```yaml
 # roles/nginx/meta/main.yml
 galaxy_info:
@@ -964,7 +984,7 @@ dependencies: []
 - [ ] No hardcoded IPs or passwords
 - [ ] All tasks have names
 - [ ] Syntax check passes
-- [ ] Added to .gitignore: *.pem, .vault_pass, *.key
+- [ ] Added to .gitignore: *.pem, .vault_pass,*.key
 
 ### ✅ Before Deploying
 
@@ -990,7 +1010,7 @@ dependencies: []
 
 1. **Use shell/command when modules exist**
    - Use `apt` not `shell: apt-get install`
-   
+
 2. **Store secrets in plaintext**
    - Always use Ansible Vault
 

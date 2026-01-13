@@ -1,4 +1,6 @@
 galaxy_info:
+  role_name: nginx
+  namespace: abtech
   author: Abraham Ayamigah
   description: An Ansible role to install and configure Nginx web server.
   company: AB Tech Solutions
@@ -16,7 +18,7 @@ galaxy_info:
   # - CC-BY-4.0
   license: GPL-2.0-or-later
 
-  min_ansible_version: 2.1
+  min_ansible_version: "2.1"
 
   # If this a Container Enabled role, provide the minimum Ansible Container version.
   # min_ansible_container_version:

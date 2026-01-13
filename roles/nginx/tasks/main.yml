@@ -2,41 +2,44 @@
 # tasks file for roles/nginx
 
 - name: Show OS
-  debug:
+  ansible.builtin.debug:
     var: ansible_distribution
 
-- block:
+- name: Install and configure Nginx
+  block:
     - name: Install nginx only on ubuntu
-      apt:
+      ansible.builtin.apt:
         name: "{{ nginx_package }}"
         state: present
-        update_cache: yes
+        update_cache: true
       when: ansible_distribution == "Ubuntu"
-      
+
     - name: Install Nginx
-      apt:
+      ansible.builtin.apt:
         name: "{{ nginx_package }}"
         state: present
-        update_cache: yes
+        update_cache: true
 
     - name: Ensure Nginx is running
-      service:
+      ansible.builtin.service:
         name: nginx
         state: started
-        enabled: yes
-
+        enabled: true
   rescue:
     - name: Log installation failure
-      debug:
+      ansible.builtin.debug:
         msg: "Nginx installation or service start failed on {{ inventory_hostname }}"
 
   always:
     - name: Installation attempt completed
-      debug:
+      ansible.builtin.debug:
         msg: "Nginx installation block completed on {{ inventory_hostname }}"
 
 - name: Deploy dynamic webpage
-  template:
+  ansible.builtin.template:
     src: index.html.j2
     dest: /var/www/html/index.html
-  notify: restart nginx
+    owner: www-data
+    group: www-data
+    mode: '0644'
+  notify: Restart nginx

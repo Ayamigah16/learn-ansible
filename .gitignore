@@ -39,3 +39,19 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+
+.ansible-lint
+.ansible/
+DEBUGGING-GUIDE.md
+DEPLOYMENT-PATTERNS-INTERVIEW-GUIDE.md
+MOLECULE-GUIDE.md
+PHASE-5-INDEX.md
+PHASE-5-SUMMARY.md
+delegation-patterns.yml
+error-handling-advanced.yml
+execution-strategies.yml
+pattern-blue-green.yml
+pattern-canary.yml
+pattern-immutable-infrastructure.yml
+roles/nginx/molecule/
+security-audit.yml
