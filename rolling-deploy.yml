@@ -1,0 +1,63 @@
+# Rolling Deployment Playbook
+# Performs zero-downtime deployments by updating servers in batches
+
+- name: Rolling Update for Web Servers
+  hosts: web
+  become: yes
+
+  # Deploy to 2 servers at a time
+  serial: 2
+
+  # Use linear strategy for predictable execution
+  strategy: linear
+
+  # Maximum percentage of failures allowed before aborting
+  max_fail_percentage: 20
+
+  pre_tasks:
+  - name: Check server health before deployment
+    uri:
+      url: "http://{{ ansible_host }}"
+      status_code: 200
+      timeout: 5
+    register: health_check
+    ignore_errors: yes
+
+  - name: Remove server from load balancer
+    debug:
+      msg: "Would remove {{ inventory_hostname }} from load balancer here"
+      # In production, use your load balancer's API or module
+
+  roles:
+  - nginx
+
+  post_tasks:
+  - name: Wait for Nginx to be ready
+    wait_for:
+      port: 80
+      delay: 2
+      timeout: 30
+
+  - name: Verify deployment
+    uri:
+      url: "http://{{ ansible_host }}"
+      status_code: 200
+      timeout: 5
+    register: post_deployment_check
+    retries: 3
+    delay: 5
+    until: post_deployment_check.status == 200
+
+  - name: Add server back to load balancer
+    debug:
+      msg: "Would add {{ inventory_hostname }} back to load balancer here"
+
+  - name: Deployment complete notification
+    debug:
+      msg: "{{ inventory_hostname }} successfully updated and back in service"
+
+  handlers:
+  - name: Graceful Nginx reload
+    service:
+      name: nginx
+      state: reloaded
