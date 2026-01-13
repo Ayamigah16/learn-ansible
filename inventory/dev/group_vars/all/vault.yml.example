@@ -1,0 +1,19 @@
+---
+# Vault-encrypted secrets for all environments
+# Create with: ansible-vault create group_vars/all/vault.yml
+# Edit with: ansible-vault edit group_vars/all/vault.yml
+# View with: ansible-vault view group_vars/all/vault.yml
+
+# Database credentials
+vault_db_password: "SuperSecret123"
+vault_db_root_password: "RootPassword456"
+
+# API Keys
+vault_api_key: "your-secret-api-key-here"
+
+# SSH Keys (use for deployment keys)
+vault_deploy_key: "ssh-key-content-here"
+
+# AWS Credentials (if not using IAM roles)
+# vault_aws_access_key: "AKIAIOSFODNN7EXAMPLE"
+# vault_aws_secret_key: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
